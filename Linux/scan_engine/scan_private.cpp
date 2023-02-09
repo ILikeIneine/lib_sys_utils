@@ -16,8 +16,11 @@
 
 namespace scan
 {
+namespace detail
+{
 
-scan_private::scan_private (int max_thread_hint)
+
+scan_private::scan_private (unsigned int max_thread_hint)
     : db_recorder_ (this, &scan_private::write_to_db_),
       notifier_ (this, &scan_private::status_notifier),
       task_pool_{max_thread_hint}
@@ -27,10 +30,10 @@ scan_private::scan_private (int max_thread_hint)
 scan_private::~scan_private()
 {
   wait();
-  fmt::print ("start time point  : {}", time_start_);
-  fmt::print ("end time point    : {}", time_end_);
-  fmt::print ("operation duration: {}ms", time_end_-time_start_);
-  fmt::print ("total file amounts: {}", file_counts_);
+  fmt::print ("start time point  : {}\n", time_start_);
+  fmt::print ("end time point    : {}\n", time_end_);
+  fmt::print ("operation duration: {}ms\n", time_end_-time_start_);
+  fmt::print ("total file amounts: {}\n", file_counts_);
 }
 
 void 
@@ -43,7 +46,7 @@ scan_private::set_path(const std::string& scan_path)
 void 
 scan_private::launch()
 {
-  fmt::print("pool launch");
+  fmt::print("pool launch\n");
   running_ = true;
   // statistics
   file_counts_ = unscanned_dirs_.size();
@@ -66,9 +69,9 @@ void
 scan_private::wait()
 {
   notifier_.wait();
-  fmt::print("notifier off");
+  fmt::print("notifier off\n");
   db_recorder_.wait();
-  fmt::print("db_recorder off");
+  fmt::print("db_recorder off\n");
 }
 
 void 
@@ -133,10 +136,15 @@ scan_private::traverse_dir_ (std::string const &path,
                         std::vector<std::string> &out_symbols)
 {
 
-  // ls
+  // In C++17, the decltype keyword does not automatically 
+  // deduce the correct type of a function pointer. Instead, 
+  // you need to specify the correct type explicitly.
   std::unique_ptr<DIR, decltype (&::closedir)> dirobj (
-      ::opendir (path.c_str ()), &closedir);
+      ::opendir (path.c_str ()), &::closedir);
 
+  // std::unique_ptr<DIR, int(*)(DIR*)> dirobj(::opendir(path.c_str()), static_cast<int(*)(DIR*)>(&::closedir));
+
+  
   if (!dirobj)
     {
       // todo: log
@@ -157,7 +165,7 @@ scan_private::traverse_dir_ (std::string const &path,
           continue;
         }
       const auto fullpath = path + filename;
-      fmt::print("scanning: {}", fullpath);
+      fmt::print("scanning: {}\n", fullpath);
 
       // if dir
       if (dir_entry->d_type == DT_DIR)
@@ -213,13 +221,13 @@ scan_private::file_checker (const std::string &fullpath)
         case ET_EXEC:
           {
             this->file_infos_.emplace_back (
-              std::make_tuple ( fullpath, file_type::EXE, ::utils::md5 (fullpath)));
+              std::make_tuple ( fullpath, utils::toUType(file_type::EXE), ::utils::md5 (fullpath)));
             break;
           }
         case ET_DYN:
           {
             this->file_infos_.emplace_back (
-                std::make_tuple (fullpath, file_type::DYN, ::utils::md5 (fullpath)));
+                std::make_tuple (fullpath, utils::toUType(file_type::DYN), ::utils::md5 (fullpath)));
             break;
           }
         case ET_NONE:
@@ -235,44 +243,44 @@ scan_private::symbol_reloader (const std::string &symbolic_path)
   char sym_absolute_path[PATH_MAX] = { 0 };
   if (::realpath (symbolic_path.c_str (), sym_absolute_path) == nullptr)
     {
-      fmt::print ("no final target at symbol:{}, errno:{}", symbolic_path,
+      fmt::print ("no final target at symbol:{}, errno:{}\n", symbolic_path,
                  errno);
       return;
     }
   if (!valid_path (sym_absolute_path))
     {
-      fmt::print ("skip symbol_path:{}", symbolic_path);
+      fmt::print ("skip symbol_path:{}\n", symbolic_path);
       return;
     }
 
   int elf_type{};
-  fmt::print ("symbol: {} => real path: {}", symbolic_path, sym_absolute_path);
+  fmt::print ("symbol: {} => real path: {}\n", symbolic_path, sym_absolute_path);
   if (::utils::check_if_valid_elf (sym_absolute_path, elf_type))
     {
       switch (elf_type)
         {
         case ET_EXEC:
           {
-            fmt::print ("ET_EXEC: {}", sym_absolute_path);
+            fmt::print ("ET_EXEC: {}\n", sym_absolute_path);
             this->file_infos_.emplace_back (std::make_tuple (
-                symbolic_path, file_type::EXE, ::utils::md5 (sym_absolute_path)));
+                symbolic_path, utils::toUType(file_type::EXE), ::utils::md5 (sym_absolute_path)));
             break;
           }
         case ET_DYN:
           {
-            fmt::print ("ET_DYN: {}", sym_absolute_path);
+            fmt::print ("ET_DYN: {}\n", sym_absolute_path);
             this->file_infos_.emplace_back (std::make_tuple (
-                symbolic_path, file_type::DYN, ::utils::md5 (sym_absolute_path)));
+                symbolic_path, utils::toUType(file_type::DYN), ::utils::md5 (sym_absolute_path)));
             break;
           }
         case ET_NONE:
           {
-            fmt::print ("ET_NONE: {}", sym_absolute_path);
+            fmt::print ("ET_NONE: {}\n", sym_absolute_path);
             break;
           }
         default:
           {
-            fmt::print ("elf_type:{}, path: {}", elf_type, sym_absolute_path);
+            fmt::print ("elf_type:{}, path: {}\n", elf_type, sym_absolute_path);
             break;
           }
         }
@@ -295,7 +303,7 @@ scan_private::status_notifier ()
   if (true /*not interrupted*/)
     {
       stop();
-      fmt::print("scan normally over!");
+      fmt::print("scan normally over!\n");
       // notify finish scan operations
     }
 }
@@ -308,5 +316,7 @@ scan_private::valid_path (std::string const &path)
                        [&path] (std::string const &prefix) {
                          return utils::hasPrefix (path, prefix);
                        });
+}
+
 }
 }

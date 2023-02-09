@@ -10,6 +10,7 @@
 #include <functional>
 #include <fmt/core.h>
 
+// todo: remove logs when it's stable
 namespace utils
 {
 
@@ -40,7 +41,7 @@ public:
   void pause()
   {
     paused_ = true;
-    fmt::print("paused, tasks_total: {}, queued: {}", tasks_total_, tasks_.size());
+    fmt::print("paused, tasks_total: {}, queued: {}\n", tasks_total_, tasks_.size());
   }
 
   void unpause()
@@ -91,9 +92,9 @@ public:
   {
     waiting_ = true;
     std::unique_lock<std::mutex> tasks_lock(tasks_mutex_);
-    fmt::print("wait for tasks end");
+    fmt::print("wait for tasks end\n");
     task_done_cv_.wait (tasks_lock, [this] { return tasks_total_ == (paused_ ? tasks_.size () : 0); });
-    fmt::print("tasks end");
+    fmt::print("tasks end\n");
     waiting_ = false;
   }
 
@@ -126,7 +127,7 @@ private:
 
   void worker()
   {
-    fmt::print("pool worker starting...");
+    fmt::print("pool worker starting...\n");
     while(running_)
     {
       std::function<void()> task;
@@ -144,7 +145,7 @@ private:
           task();
         }
         catch(std::exception& e) {
-          fmt::print("error occour: {}", e.what());
+          fmt::print("error occour: {}\n", e.what());
         }
         tasks_lock.lock();
         --tasks_total_;
@@ -152,7 +153,7 @@ private:
           task_done_cv_.notify_one();
       }
     }
-    fmt::print("pool worker ending...");
+    fmt::print("pool worker ending...\n");
   }
 
   concurrency_t determine_thread_count (concurrency_t t_count)

@@ -3,11 +3,16 @@
 #include <vector>
 #include <thread>
 #include <memory>
+#include <string>
 
 namespace scan
 {
 
-class scan_private;
+namespace detail
+{
+  class scan_private;
+}
+
 class scanner
 {
 public:
@@ -34,7 +39,7 @@ public:
   void stop ();
 
 private:
-  std::shared_ptr<scan_private> s_pointer_;
+  std::shared_ptr<detail::scan_private> s_pointer_;
 };
 
 }

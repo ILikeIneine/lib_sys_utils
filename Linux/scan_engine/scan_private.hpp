@@ -12,6 +12,9 @@
 
 namespace scan
 {
+namespace detail
+{
+
 
 using utils::Thread;
 using utils::thread_pool;
@@ -19,7 +22,7 @@ using utils::thread_pool;
 class scan_private
 {
 public:
-  scan_private(int max_thread_hint);
+  scan_private(unsigned int max_thread_hint);
   ~scan_private();
 
   void set_path(const std::string& scan_path);
@@ -42,7 +45,7 @@ private:
   void status_notifier();
 
 private:
-  std::vector<std::string> skip_scanning_prefix {"/sys", "/proc", "/dev", "/run"};
+  std::vector<std::string> skip_scanning_prefix {"/sys", "/proc", "/dev", "/run", "/mnt"};
   std::atomic_bool running_{};
 
   std::mutex dir_mutex_;
@@ -63,5 +66,6 @@ private:
   int time_start_{};
   int time_end_{};
 };
+}
 
 } // namespace scan

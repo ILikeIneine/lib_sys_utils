@@ -15,10 +15,8 @@ using namespace std::literals::chrono_literals;
 namespace scan
 {
 
-
-
 scanner::scanner (unsigned int max_thread_hint) 
-  : s_pointer_ (std::make_shared<scan_private> (max_thread_hint)) 
+  : s_pointer_ (std::make_shared<detail::scan_private> (max_thread_hint)) 
 {
 
 }

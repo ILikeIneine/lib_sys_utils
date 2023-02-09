@@ -164,4 +164,13 @@ stringToNumber (const std::string &s, const int base = 10)
 
 template <> uint8_t stringToNumber (const std::string &s, const int base);
 
+
+
+template<typename E>
+constexpr 
+auto toUType(E enumerator) noexcept
+{
+    return static_cast<std::underlying_type_t<E>>(enumerator);
+}
+
 } // namespace utils
