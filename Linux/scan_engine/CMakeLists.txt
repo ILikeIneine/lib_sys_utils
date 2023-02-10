@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.15)
 
 
 file(GLOB_RECURSE sources CMAKE_CONFIGURE_DEPENDS *.cpp *.hpp *.h)
+set(CMAKE_CXX_STANDARD 17)
 
 
 add_library(hk_scan_engine ${sources})
